@@ -63,7 +63,7 @@ class MultiChoiceQuestion(Question):
 
     def ask(self):
         """
-        Asks the user the question. Returns 1 if the user inputs the correct answer, or 0 otherwise.
+        Asks the user the question, loops until an option is selected. Returns 1 if the user inputs the correct answer, or 0 otherwise.
         """
         all_options = self.answers + self.wrong_answers
         shuffle(all_options)
@@ -73,33 +73,75 @@ class MultiChoiceQuestion(Question):
         for letter, option in zip(list(ascii_lowercase), all_options):
             option_list[letter] = option
 
-        full_question_text = self.question + "\n" + "\n".join(
-            "{index}) {option}".format(index=key, option=value)
-            for key, value in option_list.items()
+        full_question_text = (
+            self.question
+            + "\n"
+            + "\n".join(
+                "{index}) {option}".format(index=key, option=value)
+                for key, value in option_list.items()
+            )
         )
 
         print(full_question_text)
 
-        user_answer = input("Your answer: ")
-        if (
-            user_answer in option_list.keys()
-            and option_list[user_answer] in self.answers
-        ) or user_answer.lower() in [answer.lower() for answer in self.answers]:
-            print("Correct!")
-            return 1
-        else:
-            print("Incorrect!")
-            return 0
+        valid_input = False
 
-score = 0
+        while not valid_input:
+            user_answer = input("Your answer: ")
+            if user_answer.lower() in option_list.keys():
+                valid_input = True
+                if option_list[user_answer.lower()] in self.answers:
+                    print("Correct!")
+                    return 1
+                else:
+                    print("Incorrect!")
+                    return 0
+            elif user_answer.lower() in [
+                option.lower() for option in option_list.values()
+            ]:
+                valid_input = True
+                if user_answer.lower() in [answer.lower() for answer in self.answers]:
+                    print("Correct!")
+                    return 1
+                else:
+                    print("Incorrect!")
+                    return 0
+            else:
+                print("Please enter one of the options!")
+        print("How is this method still running?")
+        return 0
 
-TestQuestions = [
-    Question("What is the capital of the UK?", ["London"]),
-    Question("Name a special type of movement speed in Pathfinder.", ["Climb","Fly","Swim"]),
-    MultiChoiceQuestion("Which of these is a vegetable?", ["Potato"], ["Tomato","Cucumber"])
-]
 
-for q in TestQuestions:
-    score += q.ask()
+def run_quiz(
+    questions: list[Question],
+    score_per_question: int = 1,
+    question_separator: str = "-----------",
+    first_question_num: int = 1,
+):
+    """
+    Runs a quiz.
 
-print(f"Your score: {score}")
+    Args:
+        questions (list[Question]): The list of questions to ask.
+        score_per_question (int, optional): The score for a correct answer. Defaults to 1.
+        question_separator (str, optional): A string to separate questions in the terminal. Defaults to -----------.
+        first_question_num (int, optional): The number of the first question in the quiz. Defaults to 1.
+
+    Returns:
+        int: The total score for the quiz.
+    """
+    if len(questions) == 0:
+        raise ValueError("A quiz needs to have questions!")
+
+    score = 0
+
+    for i in range(0, len(questions)):
+        print(question_separator)
+        print("Question {q_num}".format(q_num=i + first_question_num))
+        print(question_separator)
+        score += questions[i].ask()
+
+    print(question_separator)
+    print("Your score: {total}".format(total=score))
+    print(question_separator)
+    return score
