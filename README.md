@@ -118,7 +118,7 @@ This function takes a list of Question objects and runs a quiz by performing the
 #### Raises
 |Error|Condition|
 |--------|--------|
-|ValueError|If `questions` is set to an empty list.|
+|ValueError|Raised if `questions` is set to an empty list.|
 
 #### Variables within `run_quiz()`
 |Name|Type|Description|
@@ -138,38 +138,65 @@ A short function for extracting placeholder values from format strings by perfor
 
 ### `gen_questions_csv()` function
 This function randomly generates a list of Question objects using data loaded from a CSV file by performing the following steps:
-1. Use pandas to read the CSV from the given source path and save it as `q_df`.
-2. Check that the dataframe provided is large enough for the requested number of questions, raise an error if it's too small. There should be enough data to allow rows to be used for one question only, either as an answer or an incorrect option.
-3. Extract all column names from `q_details` and store them in a set to avoid saving the same column multiple times.
-4. Use this set to select only columns that are needed from `q_df`, then initialize a column of False values to signify whether a given row has been used yet.
-For each question:
-  5. Pick a random set of details to use and extract the relevant question and answer columns.
-  6. Pick a single random unused row from the data, select the columns needed for the question and pack their values into a dictionary.
-  7. Use this dictionary to generate the question's text.
-  8. Use the same dictionary to filter the dataframe for any rows with the same values in the question columns (in case the question has multiple answers).
-  9. Save these filtered rows as the question's answers and mark those rows as used.
-  10. If the question to be generated isn't multiple choice, it can now be appended to the list.
-  11. If it is multiple choice, then incorrect answers must be generated.
-  12. Calculate the number of incorrect options required by subtracting the number of correct answers from the total options required.
-  While more incorrect options are needed:
-      13. Take a number of random unused rows equal to the number of options still needed.
-      14. Remove any rows with duplicate values in the answer column.
-      15. Flag the remaining rows as used and add their answer values to the list of incorrect options.
-      16. Update the number of options needed, taking into account the number of incorrect options.
-  17. With all details generated, the question can now be appended to the list.
-18. Once all questions have been generated, return the list of questions.
+<ol>
+  <li>Use pandas to read the CSV from the given source path and save it as `q_df`.</li>
+  <li>Check that the dataframe provided is large enough for the requested number of questions, raise an error if it's too small. There should be enough data to allow rows to be used for one question only, either as an answer or an incorrect option.</li>
+  <li>Extract all column names from `q_details` and store them in a set to avoid saving the same column multiple times.</li>
+  <li>Use this set to select only columns that are needed from `q_df`, then initialize a column of False values to signify whether a given row has been used yet.</li>
+  <li>For each question:
+    <ol>
+      <li>Pick a random set of details to use and extract the relevant question and answer columns.</li>
+      <li>Pick a single random unused row from the data, select the columns needed for the question and pack their values into a dictionary.</li>
+      <li>Use this dictionary to generate the question's text.</li>
+      <li>Use the same dictionary to filter the dataframe for any rows with the same values in the question columns (in case the question has multiple answers).</li>
+      <li>Save these filtered rows as the question's answers and mark those rows as used.</li>
+      <li>If the question to be generated isn't multiple choice, it can now be appended to the list. If it is multiple choice, then incorrect answers must be generated.</li>
+      <li>Calculate the number of incorrect options required by subtracting the number of correct answers from the total options required.</li>
+      <li>While more incorrect options are needed:
+        <ol>
+          <li>Take a number of random unused rows equal to the number of options still needed.</li>
+          <li>Remove any rows with duplicate values in the answer column.</li>
+          <li>Flag the remaining rows as used and add their answer values to the list of incorrect options.</li>
+          <li>Update the number of options needed, taking into account the number of incorrect options.</li>
+        </ol>
+      </li>
+      <li>With all details generated, the question can now be appended to the list.</li>
+    </ol>
+  </li>
+  <li>Once all questions have been generated, return the list of questions.</li>
+</ol> 
 
 #### Arguments
 |Name|Type|Description|
 |----------|-------|--------|
 |source_path|str|The name/path of the CSV file to load question data from.|
-|q_details|list[tuple[str,str]]|Templates to generate questions from. The first value should be a format string for the question text, with column names from the dataset as the placeholders. The second value should be the name of the column the answer is to be retrieved from.|
+|q_details|list[tuple[str,str]]|Templates to generate questions from. The first value should be a format string for the question text, with column names from the dataset as the placeholders. The second value should be the name of the column to retrieve the answer from.|
 |multi_choice|bool *(optional)*|Generates multiple choice questions if True, free text ones if False. Defaults to True.|
-|num_questions|int *(optional)*||
-||||
+|num_questions|int *(optional)*|The number of questions to generate. Defaults to 10.|
+|multi_choice_options|int *(optional)*|The number of options to generate for a multiple choice question. Defaults to 4.|
 
 #### Raises
-
+|Error|Condition|
+|--------|--------|
+|ValueError|Raised if the number of questions requested by `num_questions` is more than the number of rows in the data. It will also be raised if `multi_choice` is True and `num_questions` multiplied by `multi_choice_options` is higher than the number of rows in the data.|
+|KeyError|Raised if a column name provided in `q_details` can't be found in the dataframe.|
+|ValueError|Raised if there aren't enough unused rows to finish generating a question. This can trigger either when initially generating question details or when generating incorrect options.|
 
 #### Variables within `gen_questions_csv()`
-
+|Name|Type|Description|
+|----------|-------|--------|
+|q_df|DataFrame|Stores the data used to generate questions. Read from a CSV file.|
+|cols_to_use|set[str]|A set of any columns mentioned in `question_details` used to filter `q_df`. Sets naturally prevent duplicate values being stored in them, making it easy to avoid selecting the same column twice.|
+|q_list|list[Question]|Initialized as an empty list, before being populated with Question objects created during the for loop. Returned at the end of the function.|
+|selected_q|tuple[str,str]|Template for a question, randomly selected from `q_details`. The first value should be a format string for the question text, the second value should be the name of the column to retrieve the answer from.|
+|q_cols|list[str]|The list of columns used for the question text. Extracted from the first part of `selected_q`.|
+|a_col|str|The column to retrieve the answer from. Copied from the second part of `selected_q`.|
+|unused_rows|DataFrame|Rows from `q_df` that haven't yet been flagged as used.|
+|q_text_dict|dict{str:str}|Records taken from a random row of `q_df` for generating question text and finding answers. The key is the column name, the value is the value from the row.|
+|q_text|str|The text to be used for the `Question` object's `question` attribute. Generated using the format string from `selected_q` and values from `q_text_dict`.|
+|conditions|list[Boolean Series]|A list of conditions to filter the dataset by to find answers. Generated from `q_text_dict`.|
+|conds_reduced|Boolean Series|The `conditions` list condensed into a single series with numpy's `logical_and.reduce()` function. This lets it filter `q_df` to select only rows that match all the conditions in `conditions`.|
+|q_answers|list[str]|The answers to be used for the `Question` object's `answers` attribute. Selected from `q_df` using `a_col` and `conds_reduced` to select the correct column and row(s) respectively.|
+|options_needed|int|The number of options that still need generating for a multiple choice question. Initially generated by subtracting the length of `q_answers` from `multi_choice_options`. The program will attempt to generate incorrect options for the question while this variable is greater than 0. After each attempt to generate and add incorrect options, it will be updated by subtracting the combined length of `q_answers` and `q_incorrect` from `multi_choice_options`.|
+|q_incorrect|list[str]|Initialized as an empty list to be populated with incorrect answers from the data. It's then used for the `Question` object's `wrong_answers` attribute.|
+|options_to_add|DataFrame|A random sample of unused rows from `q_df`. After rows with duplicate answers are removed, values in the answer column are converted to a list and appended to `q_df`.|
