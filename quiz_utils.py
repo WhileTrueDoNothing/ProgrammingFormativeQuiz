@@ -140,6 +140,9 @@ def run_quiz(
 
     Returns:
         int: The total score for the quiz.
+
+    Raises:
+        ValueError: If the questions argument is an empty list.
     """
 
     if len(questions) == 0:
