@@ -151,7 +151,7 @@ def run_quiz(
         print(question_separator)
         print("Question {q_num}".format(q_num=i + first_question_num))
         print(question_separator)
-        score += questions[i].ask()
+        score += (questions[i].ask() * score_per_question)
 
     print(question_separator)
     print("Your score: {total}".format(total=score))
