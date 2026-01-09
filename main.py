@@ -21,6 +21,7 @@ while play_again:
         # generate questions of the selected difficulty or reset the input if it's invalid
         if selected_difficulty.lower() in ["a", "normal"]:
             print(separator_string)
+            
             question_list = q.gen_questions_csv(
                 "postcode_areas.csv",
                 [
@@ -28,10 +29,12 @@ while play_again:
                     ("What is the full name of the postcode area {postcode_area}?", "postcode_area_name")
                 ]
             )
+
             print("Good luck!")
 
         elif selected_difficulty in ["b", "hard"]:
             print(separator_string)
+
             question_list = q.gen_questions_csv(
                 "postcode_areas.csv",
                 [
@@ -40,7 +43,9 @@ while play_again:
                 ],
                 multi_choice=False
             )
+
             print("I hope you're ready for this.")
+
         else:
             print("That's not a difficulty option!")
             selected_difficulty = ""
@@ -48,6 +53,7 @@ while play_again:
     q.run_quiz(question_list, question_separator=separator_string)
 
     replay_input = input("Would you like to play again? (y/n): ")
+
     if replay_input.lower() == "y":
         print("Here we go again!")
     else:
