@@ -2,6 +2,11 @@ import quiz_utils as q
 
 play_again = True
 separator_string = "-----------"
+question_texts = [
+                    ("What is the postcode area for {postcode_area_name}?", "postcode_area"),
+                    ("What is the full name of the postcode area {postcode_area}?", "postcode_area_name")
+                ]
+
 print("Welcome to the UK postcode area quiz!")
 print("How well do you think you know your postcode areas?")
 
@@ -21,28 +26,15 @@ while play_again:
         # generate questions of the selected difficulty or reset the input if it's invalid
         if selected_difficulty.lower() in ["a", "normal"]:
             print(separator_string)
-            
-            question_list = q.gen_questions_csv(
-                "postcode_areas.csv",
-                [
-                    ("What is the postcode area for {postcode_area_name}?", "postcode_area"),
-                    ("What is the full name of the postcode area {postcode_area}?", "postcode_area_name")
-                ]
-            )
+
+            question_list = q.gen_questions_csv("postcode_areas.csv", question_texts)
 
             print("Good luck!")
 
         elif selected_difficulty in ["b", "hard"]:
             print(separator_string)
 
-            question_list = q.gen_questions_csv(
-                "postcode_areas.csv",
-                [
-                    ("What is the postcode area for {postcode_area_name}?", "postcode_area"),
-                    ("What is the full name of the postcode area {postcode_area}?", "postcode_area_name")
-                ],
-                multi_choice=False
-            )
+            question_list = q.gen_questions_csv("postcode_areas.csv", question_texts, multi_choice=False)
 
             print("I hope you're ready for this.")
 
