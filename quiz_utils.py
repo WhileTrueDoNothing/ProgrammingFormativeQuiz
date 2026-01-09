@@ -194,6 +194,7 @@ def gen_questions_csv(
 
     Raises:
         ValueError: If more questions than can be provided by the data are requested, or if the function runs out of unused rows of data while generating questions.
+        KeyError: If a column name provided in q_details can't be found in the dataframe.
     """
 
     print("Generating questions...")
